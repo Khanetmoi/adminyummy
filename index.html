@@ -1,0 +1,1924 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Yummy Admin - Dashboard</title>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #ff6b6b;
+            --primary-dark: #ee5a5a;
+            --secondary: #4ecdc4;
+            --dark: #2c3e50;
+            --light: #f7f9fc;
+            --white: #ffffff;
+            --success: #27ae60;
+            --warning: #f39c12;
+            --danger: #e74c3c;
+            --info: #3498db;
+            --shadow: 0 4px 20px rgba(0,0,0,0.1);
+            --radius: 12px;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: var(--light);
+            color: var(--dark);
+            line-height: 1.6;
+        }
+
+        .login-screen {
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+        }
+
+        .login-box {
+            background: var(--white);
+            padding: 3rem;
+            border-radius: var(--radius);
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            width: 90%;
+            max-width: 400px;
+        }
+
+        .login-box h1 {
+            color: var(--primary);
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 0.8rem;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1rem;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        .btn {
+            padding: 0.8rem 1.5rem;
+            border: none;
+            border-radius: var(--radius);
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+            font-size: 1rem;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: var(--white);
+            width: 100%;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-dark);
+        }
+
+        .btn-secondary {
+            background: var(--secondary);
+            color: var(--white);
+        }
+
+        .btn-danger {
+            background: var(--danger);
+            color: var(--white);
+        }
+
+        .btn-success {
+            background: var(--success);
+            color: var(--white);
+        }
+
+        .btn-warning {
+            background: var(--warning);
+            color: var(--white);
+        }
+
+        .btn-info {
+            background: var(--info);
+            color: var(--white);
+        }
+
+        .btn-small {
+            padding: 0.4rem 0.8rem;
+            font-size: 0.85rem;
+        }
+
+        .dashboard {
+            display: none;
+            min-height: 100vh;
+        }
+
+        .sidebar {
+            position: fixed;
+            left: 0;
+            top: 0;
+            width: 250px;
+            height: 100vh;
+            background: var(--dark);
+            color: var(--white);
+            padding: 2rem 0;
+            overflow-y: auto;
+        }
+
+        .sidebar-header {
+            padding: 0 1.5rem 2rem;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .sidebar-header h2 {
+            color: var(--primary);
+            font-size: 1.5rem;
+        }
+
+        .sidebar-menu {
+            padding: 1.5rem 0;
+        }
+
+        .menu-item {
+            padding: 1rem 1.5rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+        }
+
+        .menu-item:hover, .menu-item.active {
+            background: rgba(255,255,255,0.1);
+            border-left: 4px solid var(--primary);
+        }
+
+        .main-content {
+            margin-left: 250px;
+            padding: 2rem;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid #e0e0e0;
+        }
+
+        .header h1 {
+            color: var(--dark);
+        }
+
+        .user-menu {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: var(--white);
+            padding: 1.5rem;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .stat-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8rem;
+        }
+
+        .stat-icon.blue { background: #e3f2fd; }
+        .stat-icon.green { background: #e8f5e9; }
+        .stat-icon.orange { background: #fff3e0; }
+        .stat-icon.red { background: #ffebee; }
+        .stat-icon.purple { background: #f3e5f5; }
+
+        .stat-info h3 {
+            font-size: 2rem;
+            color: var(--dark);
+        }
+
+        .stat-info p {
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .section {
+            display: none;
+            animation: fadeIn 0.3s;
+        }
+
+        .section.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .card {
+            background: var(--white);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .card-header h2 {
+            color: var(--dark);
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .data-table th, .data-table td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .data-table th {
+            background: var(--light);
+            font-weight: 600;
+            color: #666;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+        }
+
+        .data-table tr:hover {
+            background: #f5f5f5;
+        }
+
+        .badge {
+            padding: 0.3rem 0.8rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        .badge-success {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .badge-warning {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .badge-danger {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .badge-info {
+            background: #d1ecf1;
+            color: #0c5460;
+        }
+
+        .badge-primary {
+            background: #cce5ff;
+            color: #004085;
+        }
+
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            padding: 2rem;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal {
+            background: var(--white);
+            border-radius: var(--radius);
+            width: 90%;
+            max-width: 700px;
+            max-height: 90vh;
+            overflow-y: auto;
+            position: relative;
+        }
+
+        .modal-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid #e0e0e0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #666;
+        }
+
+        .modal-body {
+            padding: 1.5rem;
+        }
+
+        .modal-footer {
+            padding: 1rem 1.5rem;
+            border-top: 1px solid #e0e0e0;
+            display: flex;
+            justify-content: flex-end;
+            gap: 1rem;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            font-size: 0.9rem;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 0.7rem;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-family: inherit;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        .checkbox-group {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .menu-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .menu-card {
+            background: var(--white);
+            border-radius: var(--radius);
+            overflow: hidden;
+            box-shadow: var(--shadow);
+            transition: transform 0.3s;
+        }
+
+        .menu-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .menu-image {
+            height: 160px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem;
+            position: relative;
+        }
+
+        .menu-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .menu-info {
+            padding: 1rem;
+        }
+
+        .menu-meta {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .menu-actions {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .sub-plans-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .sub-plan-card {
+            background: var(--white);
+            border-radius: var(--radius);
+            padding: 1.5rem;
+            box-shadow: var(--shadow);
+            border: 3px solid transparent;
+        }
+
+        .sub-plan-card.active {
+            border-color: var(--success);
+        }
+
+        .features-list {
+            list-style: none;
+            margin: 1rem 0;
+        }
+
+        .features-list li {
+            padding: 0.3rem 0;
+            padding-left: 1.5rem;
+            position: relative;
+        }
+
+        .features-list li::before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            color: var(--success);
+        }
+
+        .filter-bar {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        .filter-bar input,
+        .filter-bar select {
+            padding: 0.6rem 1rem;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+        }
+
+        .search-box {
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255,255,255,0.9);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+        }
+
+        .loading-overlay.active {
+            display: flex;
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid var(--light);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .alert {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 1rem 1.5rem;
+            border-radius: 8px;
+            z-index: 9999;
+            animation: slideIn 0.3s;
+            max-width: 400px;
+        }
+
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        .alert-success {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .alert-error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        /* Order specific styles */
+        .order-card {
+            background: var(--white);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            border-left: 4px solid var(--warning);
+        }
+
+        .order-card.accepted {
+            border-left-color: var(--success);
+        }
+
+        .order-card.denied {
+            border-left-color: var(--danger);
+        }
+
+        .order-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .order-id {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: var(--dark);
+        }
+
+        .order-date {
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .order-items {
+            background: var(--light);
+            padding: 1rem;
+            border-radius: 8px;
+            margin: 1rem 0;
+        }
+
+        .order-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.5rem 0;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .order-item:last-child {
+            border-bottom: none;
+        }
+
+        .order-total {
+            text-align: right;
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: var(--primary);
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 2px solid #e0e0e0;
+        }
+
+        .order-actions {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .status-btn {
+            flex: 1;
+            padding: 0.6rem;
+            border: 2px solid;
+            background: transparent;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .status-btn.accept {
+            border-color: var(--success);
+            color: var(--success);
+        }
+
+        .status-btn.accept:hover, .status-btn.accept.active {
+            background: var(--success);
+            color: white;
+        }
+
+        .status-btn.deny {
+            border-color: var(--danger);
+            color: var(--danger);
+        }
+
+        .status-btn.deny:hover, .status-btn.deny.active {
+            background: var(--danger);
+            color: white;
+        }
+
+        .status-btn.pending {
+            border-color: var(--warning);
+            color: var(--warning);
+        }
+
+        .status-btn.pending:hover, .status-btn.pending.active {
+            background: var(--warning);
+            color: white;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+            .main-content {
+                margin-left: 0;
+            }
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Login Screen -->
+    <div class="login-screen" id="loginScreen">
+        <div class="login-box">
+            <h1>🍽️ Yummy Admin</h1>
+            <form onsubmit="handleLogin(event)">
+                <div class="form-group">
+                    <label>Email Admin</label>
+                    <input type="email" id="adminEmail" required placeholder="admin@yummy.com">
+                </div>
+                <div class="form-group">
+                    <label>Mot de passe</label>
+                    <input type="password" id="adminPassword" required placeholder="••••••••">
+                </div>
+                <button type="submit" class="btn btn-primary" id="loginBtn">Connexion</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Dashboard -->
+    <div class="dashboard" id="dashboard">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <h2>🍽️ Yummy</h2>
+                <p style="color: #999; font-size: 0.9rem;">Panel Admin</p>
+            </div>
+            <nav class="sidebar-menu">
+                <div class="menu-item active" onclick="showSection('overview')">
+                    <span>📊</span> Vue d'ensemble
+                </div>
+                <div class="menu-item" onclick="showSection('orders')">
+                    <span>📦</span> Commandes
+                </div>
+                <div class="menu-item" onclick="showSection('users')">
+                    <span>👥</span> Utilisateurs
+                </div>
+                <div class="menu-item" onclick="showSection('subscriptions')">
+                    <span>⭐</span> Abonnements
+                </div>
+                <div class="menu-item" onclick="showSection('menu')">
+                    <span>🍔</span> Menu & Plats
+                </div>
+                <div class="menu-item" onclick="showSection('plans')">
+                    <span>💎</span> Offres & Tarifs
+                </div>
+                <div class="menu-item" onclick="logout()" style="margin-top: 2rem; color: var(--danger);">
+                    <span>🚪</span> Déconnexion
+                </div>
+            </nav>
+        </aside>
+
+        <main class="main-content">
+            <div class="header">
+                <h1 id="pageTitle">Tableau de bord</h1>
+                <div class="user-menu">
+                    <span id="adminName">Admin</span>
+                    <button class="btn btn-secondary btn-small" onclick="logout()">Déconnexion</button>
+                </div>
+            </div>
+
+            <!-- Overview Section -->
+            <div class="section active" id="overviewSection">
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon blue">👥</div>
+                        <div class="stat-info">
+                            <h3 id="statTotalUsers">0</h3>
+                            <p>Utilisateurs</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon green">⭐</div>
+                        <div class="stat-info">
+                            <h3 id="statActiveSubs">0</h3>
+                            <p>Abonnements actifs</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon purple">📦</div>
+                        <div class="stat-info">
+                            <h3 id="statPendingOrders">0</h3>
+                            <p>Commandes en attente</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon orange">🍽️</div>
+                        <div class="stat-info">
+                            <h3 id="statTotalMeals">0</h3>
+                            <p>Plats au menu</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon red">💰</div>
+                        <div class="stat-info">
+                            <h3 id="statTodayRevenue">0€</h3>
+                            <p>Revenus aujourd'hui</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h2>Commandes récentes</h2>
+                        <button class="btn btn-primary btn-small" onclick="showSection('orders')">Voir tout</button>
+                    </div>
+                    <div id="recentOrders">
+                        <p style="color: #666; text-align: center; padding: 2rem;">Chargement...</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Orders Section -->
+            <div class="section" id="ordersSection">
+                <div class="card">
+                    <div class="card-header">
+                        <h2>Gestion des Commandes</h2>
+                        <div class="filter-bar">
+                            <input type="text" class="search-box" id="orderSearch" placeholder="Rechercher une commande..." onkeyup="filterOrders()">
+                            <select id="orderStatusFilter" onchange="filterOrders()">
+                                <option value="all">Tous les statuts</option>
+                                <option value="pending">En attente</option>
+                                <option value="accepted">Acceptées</option>
+                                <option value="denied">Refusées</option>
+                            </select>
+                            <select id="orderDateFilter" onchange="filterOrders()">
+                                <option value="all">Toutes les dates</option>
+                                <option value="today">Aujourd'hui</option>
+                                <option value="week">Cette semaine</option>
+                                <option value="month">Ce mois</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div id="ordersList">
+                        <!-- Filled by JS -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Users Section -->
+            <div class="section" id="usersSection">
+                <div class="card">
+                    <div class="card-header">
+                        <h2>Liste des utilisateurs</h2>
+                        <div class="filter-bar">
+                            <input type="text" class="search-box" id="userSearch" placeholder="Rechercher..." onkeyup="filterUsers()">
+                            <select id="userFilter" onchange="filterUsers()">
+                                <option value="all">Tous</option>
+                                <option value="active">Avec abonnement</option>
+                                <option value="inactive">Sans abonnement</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div style="overflow-x: auto;">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Nom</th>
+                                    <th>Email</th>
+                                    <th>Téléphone</th>
+                                    <th>Adresse</th>
+                                    <th>Abonnement</th>
+                                    <th>Statut</th>
+                                </tr>
+                            </thead>
+                            <tbody id="usersTableBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Subscriptions Section -->
+            <div class="section" id="subscriptionsSection">
+                <div class="card">
+                    <div class="card-header">
+                        <h2>Abonnements actifs</h2>
+                        <div class="filter-bar">
+                            <input type="text" class="search-box" id="subSearch" placeholder="Rechercher..." onkeyup="filterSubscriptions()">
+                            <select id="subPlanFilter" onchange="filterSubscriptions()">
+                                <option value="all">Tous les plans</option>
+                                <option value="bon">Bon</option>
+                                <option value="delicieux">Délicieux</option>
+                                <option value="exquis">Exquis</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div style="overflow-x: auto;">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Utilisateur</th>
+                                    <th>Plan</th>
+                                    <th>Plats restants</th>
+                                    <th>Utilisés (semaine)</th>
+                                    <th>Catégories</th>
+                                    <th>Fin</th>
+                                </tr>
+                            </thead>
+                            <tbody id="subscriptionsTableBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Menu Section -->
+            <div class="section" id="menuSection">
+                <div class="card">
+                    <div class="card-header">
+                        <h2>Gestion du Menu</h2>
+                        <button class="btn btn-success" onclick="openAddMealModal()">+ Ajouter un plat</button>
+                    </div>
+                    <div class="filter-bar">
+                        <select id="menuCategoryFilter" onchange="filterMenu()">
+                            <option value="all">Toutes catégories</option>
+                            <option value="breakfast">Petit-déjeuner</option>
+                            <option value="lunch">Déjeuner</option>
+                            <option value="dinner">Dîner</option>
+                        </select>
+                        <select id="menuSubcategoryFilter" onchange="filterMenu()">
+                            <option value="all">Toutes sous-catégories</option>
+                        </select>
+                        <button class="btn btn-secondary btn-small" onclick="openManageSubcategoriesModal()">Gérer sous-catégories</button>
+                    </div>
+                    <div class="menu-grid" id="menuGrid"></div>
+                </div>
+            </div>
+
+            <!-- Plans Section -->
+            <div class="section" id="plansSection">
+                <div class="card">
+                    <div class="card-header">
+                        <h2>Offres d'abonnement</h2>
+                        <button class="btn btn-success" onclick="openAddPlanModal()">+ Nouvelle offre</button>
+                    </div>
+                    <div class="sub-plans-grid" id="plansGrid"></div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Order Detail Modal -->
+    <div class="modal-overlay" id="orderModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3>Détails de la commande <span id="modalOrderId"></span></h3>
+                <button class="modal-close" onclick="closeModal('orderModal')">&times;</button>
+            </div>
+            <div class="modal-body" id="orderModalBody">
+                <!-- Filled by JS -->
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('orderModal')">Fermer</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Meal Modal -->
+    <div class="modal-overlay" id="mealModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 id="mealModalTitle">Ajouter un plat</h3>
+                <button class="modal-close" onclick="closeModal('mealModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="mealForm">
+                    <input type="hidden" id="mealId">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Nom</label>
+                            <input type="text" id="mealName" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Prix (€)</label>
+                            <input type="number" id="mealPrice" step="0.01" required>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Catégorie</label>
+                            <select id="mealCategory" required onchange="updateSubcategories()">
+                                <option value="breakfast">Petit-déjeuner</option>
+                                <option value="lunch">Déjeuner</option>
+                                <option value="dinner">Dîner</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Sous-catégorie</label>
+                            <select id="mealSubcategory" required></select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>URL image</label>
+                        <input type="url" id="mealImage" placeholder="https://...">
+                    </div>
+                    <div class="form-group">
+                        <label>Description</label>
+                        <textarea id="mealDescription" required></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>Ingrédients (séparés par virgules)</label>
+                        <textarea id="mealIngredients" placeholder="Farine, Œufs, Sucre..." required></textarea>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Calories</label>
+                            <input type="number" id="mealCalories" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Emoji</label>
+                            <input type="text" id="mealEmoji" maxlength="2" placeholder="🍔">
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('mealModal')">Annuler</button>
+                <button class="btn btn-primary" onclick="saveMeal()">Enregistrer</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Subcategories Modal -->
+    <div class="modal-overlay" id="subcategoriesModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3>Gérer les sous-catégories</h3>
+                <button class="modal-close" onclick="closeModal('subcategoriesModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>Catégorie</label>
+                    <select id="subcatCategory" onchange="loadSubcategoriesForManagement()">
+                        <option value="breakfast">Petit-déjeuner</option>
+                        <option value="lunch">Déjeuner</option>
+                        <option value="dinner">Dîner</option>
+                    </select>
+                </div>
+                <div id="subcategoriesList" style="margin: 1rem 0;"></div>
+                <div class="form-group">
+                    <label>Nouvelle sous-catégorie</label>
+                    <div style="display: flex; gap: 0.5rem;">
+                        <input type="text" id="newSubcategoryName" placeholder="Nom">
+                        <input type="text" id="newSubcategoryId" placeholder="ID (ex: burger)">
+                        <button class="btn btn-success" onclick="addSubcategory()">Ajouter</button>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('subcategoriesModal')">Fermer</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Plan Modal -->
+    <div class="modal-overlay" id="planModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 id="planModalTitle">Modifier l'offre</h3>
+                <button class="modal-close" onclick="closeModal('planModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="planForm">
+                    <input type="hidden" id="planId">
+                    <div class="form-group">
+                        <label>Nom</label>
+                        <input type="text" id="planName" required>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Prix (€/semaine)</label>
+                            <input type="number" id="planPrice" step="0.01" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Plats/semaine</label>
+                            <input type="number" id="planMeals" required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Catégories incluses</label>
+                        <div class="checkbox-group">
+                            <label class="checkbox-item">
+                                <input type="checkbox" id="catBreakfast" value="breakfast">
+                                <span>Petit-déjeuner</span>
+                            </label>
+                            <label class="checkbox-item">
+                                <input type="checkbox" id="catLunch" value="lunch">
+                                <span>Déjeuner</span>
+                            </label>
+                            <label class="checkbox-item">
+                                <input type="checkbox" id="catDinner" value="dinner">
+                                <span>Dîner</span>
+                            </label>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Avantages (un par ligne)</label>
+                        <textarea id="planFeatures" rows="4"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('planModal')">Annuler</button>
+                <button class="btn btn-primary" onclick="savePlan()">Enregistrer</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="spinner"></div>
+    </div>
+
+    <script>
+        // Firebase Config
+        const firebaseConfig = {
+            apiKey: "AIzaSyCceMsLRbfSyi-akEecSmcnpqYmlg5Nak4",
+            authDomain: "yummy-8bceb.firebaseapp.com",
+            projectId: "yummy-8bceb",
+            storageBucket: "yummy-8bceb.firebasestorage.app",
+            messagingSenderId: "970955071017",
+            appId: "1:970955071017:web:12184754ab204a8b36c638",
+            measurementId: "G-V1XEV4Q36B"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+
+        // State
+        let currentAdmin = null;
+        let users = [];
+        let subscriptions = [];
+        let meals = [];
+        let plans = [];
+        let orders = [];
+        let subcategories = {
+            breakfast: [{id: 'pastry', name: 'Pâtisserie'}, {id: 'milkshake', name: 'Milkshakes'}, {id: 'pancake', name: 'Pancakes'}],
+            lunch: [{id: 'burger', name: 'Burgers'}, {id: 'salad', name: 'Salades'}, {id: 'pasta', name: 'Pâtes'}, {id: 'pizza', name: 'Pizzas'}],
+            dinner: [{id: 'meat', name: 'Viandes'}, {id: 'fish', name: 'Poissons'}, {id: 'vegetarian', name: 'Végétarien'}, {id: 'asian', name: 'Asiatique'}]
+        };
+
+        // Auth
+        auth.onAuthStateChanged((user) => {
+            if (user) {
+                currentAdmin = user;
+                showDashboard();
+                loadAllData();
+                setupRealtimeListeners();
+            } else {
+                showLogin();
+            }
+        });
+
+        function showLogin() {
+            document.getElementById('loginScreen').style.display = 'flex';
+            document.getElementById('dashboard').style.display = 'none';
+        }
+
+        function showDashboard() {
+            document.getElementById('loginScreen').style.display = 'none';
+            document.getElementById('dashboard').style.display = 'block';
+            document.getElementById('adminName').textContent = currentAdmin.email;
+        }
+
+        async function handleLogin(e) {
+            e.preventDefault();
+            const email = document.getElementById('adminEmail').value;
+            const password = document.getElementById('adminPassword').value;
+            const btn = document.getElementById('loginBtn');
+            
+            btn.disabled = true;
+            btn.textContent = 'Connexion...';
+            
+            try {
+                await auth.signInWithEmailAndPassword(email, password);
+            } catch (error) {
+                alert('Erreur: ' + error.message);
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Connexion';
+            }
+        }
+
+        function logout() {
+            auth.signOut();
+        }
+
+        function setupRealtimeListeners() {
+            // Real-time orders updates
+            db.collection('orders').orderBy('createdAt', 'desc').onSnapshot((snapshot) => {
+                orders = snapshot.docs.map(doc => ({id: doc.id, ...doc.data()}));
+                updateOrdersUI();
+                updateDashboardStats();
+            });
+        }
+
+        // Navigation
+        function showSection(section) {
+            document.querySelectorAll('.menu-item').forEach(item => item.classList.remove('active'));
+            event.target.closest('.menu-item').classList.add('active');
+            
+            document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+            
+            const sectionMap = {
+                'overview': 'overviewSection',
+                'orders': 'ordersSection',
+                'users': 'usersSection',
+                'subscriptions': 'subscriptionsSection',
+                'menu': 'menuSection',
+                'plans': 'plansSection'
+            };
+            
+            document.getElementById(sectionMap[section]).classList.add('active');
+            
+            const titles = {
+                'overview': 'Tableau de bord',
+                'orders': 'Gestion des Commandes',
+                'users': 'Utilisateurs',
+                'subscriptions': 'Abonnements',
+                'menu': 'Gestion du Menu',
+                'plans': 'Offres & Tarifs'
+            };
+            document.getElementById('pageTitle').textContent = titles[section];
+        }
+
+        // Data Loading
+        async function loadAllData() {
+            showLoading(true);
+            
+            try {
+                const [usersSnap, subsSnap, mealsSnap, plansSnap, subcatSnap] = await Promise.all([
+                    db.collection('users').get(),
+                    db.collection('subscriptions').get(),
+                    db.collection('meals').get(),
+                    db.collection('plans').get(),
+                    db.collection('config').doc('subcategories').get()
+                ]);
+
+                users = usersSnap.docs.map(doc => ({id: doc.id, ...doc.data()}));
+                subscriptions = subsSnap.docs.map(doc => ({id: doc.id, ...doc.data()}));
+                meals = mealsSnap.docs.map(doc => ({id: doc.id, ...doc.data()}));
+                plans = plansSnap.docs.map(doc => ({id: doc.id, ...doc.data()}));
+                
+                if (subcatSnap.exists) subcategories = subcatSnap.data();
+                
+                if (meals.length === 0) await initializeDefaultMeals();
+                if (plans.length === 0) await initializeDefaultPlans();
+                
+                updateDashboardStats();
+                renderUsers();
+                renderSubscriptions();
+                renderMenu();
+                renderPlans();
+                
+            } catch (error) {
+                console.error(error);
+                showAlert('Erreur de chargement', 'error');
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        async function initializeDefaultMeals() {
+            const defaults = [
+                {name: "Croissant", price: 3.50, category: "breakfast", subcategory: "pastry", emoji: "🥐", description: "Croissant pur beurre", ingredients: ["Farine", "Beurre"], calories: 280},
+                {name: "Burger Classic", price: 12.50, category: "lunch", subcategory: "burger", emoji: "🍔", description: "Bœuf et cheddar", ingredients: ["Pain", "Bœuf"], calories: 850},
+                {name: "Steak Frites", price: 18.50, category: "dinner", subcategory: "meat", emoji: "🥩", description: "Entrecôte grillée", ingredients: ["Entrecôte", "Frites"], calories: 950}
+            ];
+            
+            const batch = db.batch();
+            defaults.forEach(meal => {
+                batch.set(db.collection('meals').doc(), meal);
+            });
+            await batch.commit();
+            const newSnap = await db.collection('meals').get();
+            meals = newSnap.docs.map(doc => ({id: doc.id, ...doc.data()}));
+        }
+
+        async function initializeDefaultPlans() {
+            const defaults = [
+                {id: 'bon', name: 'Bon', price: 29, meals: 7, categories: ['lunch'], features: ['Accès Déjeuner', '7 plats/semaine'], active: true},
+                {id: 'delicieux', name: 'Délicieux', price: 49, meals: 14, categories: ['breakfast', 'lunch'], features: ['Petit-déj + Déjeuner', '14 plats/semaine'], active: true},
+                {id: 'exquis', name: 'Exquis', price: 69, meals: 14, categories: ['breakfast', 'lunch', 'dinner'], features: ['Tous les repas', '14 plats/semaine'], active: true}
+            ];
+            
+            const batch = db.batch();
+            defaults.forEach(plan => {
+                batch.set(db.collection('plans').doc(plan.id), plan);
+            });
+            await batch.commit();
+        }
+
+        // Dashboard & Orders
+        function updateDashboardStats() {
+            document.getElementById('statTotalUsers').textContent = users.length;
+            document.getElementById('statActiveSubs').textContent = subscriptions.filter(s => s.status === 'active').length;
+            document.getElementById('statPendingOrders').textContent = orders.filter(o => o.status === 'pending').length;
+            document.getElementById('statTotalMeals').textContent = meals.length;
+            
+            // Calculate today's revenue
+            const today = new Date();
+            today.setHours(0,0,0,0);
+            const todayRevenue = orders
+                .filter(o => {
+                    const orderDate = o.createdAt?.toDate();
+                    return orderDate >= today && o.status !== 'denied';
+                })
+                .reduce((sum, o) => sum + (o.totalPrice || 0), 0);
+            document.getElementById('statTodayRevenue').textContent = todayRevenue.toFixed(2) + '€';
+            
+            // Recent orders for overview
+            const recent = orders.slice(0, 5);
+            const recentHtml = recent.map(order => {
+                const user = users.find(u => u.id === order.userId);
+                return `
+                    <div style="padding: 1rem; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <strong>Commande #${order.id.slice(-6).toUpperCase()}</strong>
+                            <p style="color: #666; font-size: 0.9rem;">${user?.name || 'Client'} • ${order.items?.length || 0} plat(s)</p>
+                        </div>
+                        <span class="badge badge-${order.status === 'pending' ? 'warning' : order.status === 'accepted' ? 'success' : 'danger'}">
+                            ${order.status === 'pending' ? 'En attente' : order.status === 'accepted' ? 'Acceptée' : 'Refusée'}
+                        </span>
+                    </div>
+                `;
+            }).join('');
+            
+            document.getElementById('recentOrders').innerHTML = recentHtml || '<p style="color: #666; text-align: center;">Aucune commande</p>';
+        }
+
+        function updateOrdersUI() {
+            const list = document.getElementById('ordersList');
+            const statusFilter = document.getElementById('orderStatusFilter').value;
+            const dateFilter = document.getElementById('orderDateFilter').value;
+            const search = document.getElementById('orderSearch').value.toLowerCase();
+            
+            let filtered = orders;
+            
+            // Status filter
+            if (statusFilter !== 'all') {
+                filtered = filtered.filter(o => o.status === statusFilter);
+            }
+            
+            // Date filter
+            if (dateFilter !== 'all') {
+                const now = new Date();
+                filtered = filtered.filter(o => {
+                    const orderDate = o.createdAt?.toDate();
+                    if (!orderDate) return false;
+                    
+                    if (dateFilter === 'today') {
+                        const today = new Date();
+                        today.setHours(0,0,0,0);
+                        return orderDate >= today;
+                    } else if (dateFilter === 'week') {
+                        const weekAgo = new Date(now - 7 * 24 * 60 * 60 * 1000);
+                        return orderDate >= weekAgo;
+                    } else if (dateFilter === 'month') {
+                        const monthAgo = new Date(now - 30 * 24 * 60 * 60 * 1000);
+                        return orderDate >= monthAgo;
+                    }
+                    return true;
+                });
+            }
+            
+            // Search filter
+            if (search) {
+                filtered = filtered.filter(o => {
+                    const user = users.find(u => u.id === o.userId);
+                    return o.id.toLowerCase().includes(search) || 
+                           user?.name?.toLowerCase().includes(search) ||
+                           user?.email?.toLowerCase().includes(search);
+                });
+            }
+            
+            if (filtered.length === 0) {
+                list.innerHTML = '<p style="color: #666; text-align: center; padding: 3rem;">Aucune commande trouvée</p>';
+                return;
+            }
+            
+            list.innerHTML = filtered.map(order => {
+                const user = users.find(u => u.id === order.userId);
+                const date = order.createdAt?.toDate().toLocaleString('fr-FR') || 'Date inconnue';
+                const isPending = order.status === 'pending';
+                const isAccepted = order.status === 'accepted';
+                const isDenied = order.status === 'denied';
+                
+                return `
+                    <div class="order-card ${order.status}">
+                        <div class="order-header">
+                            <div>
+                                <div class="order-id">Commande #${order.id.slice(-6).toUpperCase()}</div>
+                                <div class="order-date">${date}</div>
+                                <div style="margin-top: 0.5rem;">
+                                    <strong>${user?.name || 'Client inconnu'}</strong><br>
+                                    <small>${user?.email || ''} • ${user?.phone || ''}</small>
+                                </div>
+                            </div>
+                            <span class="badge badge-${isPending ? 'warning' : isAccepted ? 'success' : 'danger'}">
+                                ${isPending ? '⏳ En attente' : isAccepted ? '✓ Acceptée' : '✗ Refusée'}
+                            </span>
+                        </div>
+                        
+                        <div class="order-items">
+                            ${order.items?.map(item => `
+                                <div class="order-item">
+                                    <span>${item.emoji || '🍽️'} ${item.name} ${item.note ? `<small style="color: #666;">(${item.note})</small>` : ''}</span>
+                                    <span>${item.price > 0 ? item.price.toFixed(2) + '€' : '<span style="color: var(--success);">Inclus</span>'}</span>
+                                </div>
+                            `).join('') || '<p style="color: #666;">Aucun détail</p>'}
+                            <div class="order-total">
+                                Total: ${order.totalPrice?.toFixed(2) || '0.00'}€
+                                ${order.subscriptionMealsUsed > 0 ? `<br><small style="color: var(--success);">${order.subscriptionMealsUsed} plat(s) par abonnement</small>` : ''}
+                            </div>
+                        </div>
+                        
+                        <div style="display: flex; gap: 0.5rem; margin-top: 1rem; padding-top: 1rem; border-top: 1px solid #eee;">
+                            <small style="color: #666; flex: 1;">
+                                📍 ${order.deliveryAddress || 'Adresse non spécifiée'}<br>
+                                🚚 Livraison estimée: ${order.estimatedDelivery?.toDate().toLocaleString('fr-FR') || 'Non définie'}
+                            </small>
+                        </div>
+                        
+                        <div class="order-actions">
+                            <button class="status-btn accept ${isAccepted ? 'active' : ''}" onclick="updateOrderStatus('${order.id}', 'accepted')" ${!isPending && !isAccepted ? 'disabled' : ''}>
+                                ✓ Accepter
+                            </button>
+                            <button class="status-btn deny ${isDenied ? 'active' : ''}" onclick="updateOrderStatus('${order.id}', 'denied')" ${!isPending && !isDenied ? 'disabled' : ''}>
+                                ✗ Refuser
+                            </button>
+                            <button class="status-btn pending ${isPending ? 'active' : ''}" onclick="updateOrderStatus('${order.id}', 'pending')" ${isPending ? 'disabled' : ''}>
+                                ⏳ En attente
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function filterOrders() {
+            updateOrdersUI();
+        }
+
+        async function updateOrderStatus(orderId, newStatus) {
+            if (!confirm(`Changer le statut en "${newStatus === 'accepted' ? 'Acceptée' : newStatus === 'denied' ? 'Refusée' : 'En attente'}" ?`)) {
+                return;
+            }
+            
+            showLoading(true);
+            try {
+                await db.collection('orders').doc(orderId).update({
+                    status: newStatus,
+                    updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+                    updatedBy: currentAdmin.uid
+                });
+                
+                showAlert(`Commande ${newStatus === 'accepted' ? 'acceptée' : newStatus === 'denied' ? 'refusée' : 'mise en attente'}`, 'success');
+            } catch (error) {
+                console.error(error);
+                showAlert('Erreur lors de la mise à jour', 'error');
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        function viewOrderDetails(orderId) {
+            const order = orders.find(o => o.id === orderId);
+            if (!order) return;
+            
+            const user = users.find(u => u.id === order.userId);
+            
+            document.getElementById('modalOrderId').textContent = '#' + order.id.slice(-6).toUpperCase();
+            document.getElementById('orderModalBody').innerHTML = `
+                <div style="margin-bottom: 1.5rem;">
+                    <h4>Client</h4>
+                    <p><strong>${user?.name || 'Inconnu'}</strong><br>
+                    ${user?.email || ''}<br>
+                    ${user?.phone || ''}<br>
+                    ${user?.address || ''}</p>
+                </div>
+                
+                <div style="margin-bottom: 1.5rem;">
+                    <h4>Détails de la commande</h4>
+                    <p>Date: ${order.createdAt?.toDate().toLocaleString('fr-FR') || 'N/A'}<br>
+                    Statut: <span class="badge badge-${order.status === 'pending' ? 'warning' : order.status === 'accepted' ? 'success' : 'danger'}">${order.status}</span><br>
+                    Total: <strong>${order.totalPrice?.toFixed(2)}€</strong></p>
+                </div>
+                
+                <div>
+                    <h4>Plats commandés</h4>
+                    ${order.items?.map(item => `
+                        <div style="padding: 0.5rem; background: #f5f5f5; margin-bottom: 0.5rem; border-radius: 4px;">
+                            <strong>${item.name}</strong> - ${item.price > 0 ? item.price.toFixed(2) + '€' : 'Inclus'}
+                            ${item.note ? `<br><small>Note: ${item.note}</small>` : ''}
+                        </div>
+                    `).join('') || 'Aucun détail'}
+                </div>
+            `;
+            
+            document.getElementById('orderModal').classList.add('active');
+        }
+
+        // Users
+        function renderUsers() {
+            const tbody = document.getElementById('usersTableBody');
+            tbody.innerHTML = users.map(user => {
+                const sub = subscriptions.find(s => s.userId === user.id && s.status === 'active');
+                return `
+                    <tr>
+                        <td><strong>${user.name || 'N/A'}</strong></td>
+                        <td>${user.email}</td>
+                        <td>${user.phone || 'N/A'}</td>
+                        <td>${user.address || 'N/A'}</td>
+                        <td>${sub ? `<span class="text-primary">${sub.name}</span>` : '-'}</td>
+                        <td>${sub ? '<span class="badge badge-success">Actif</span>' : '<span class="badge badge-warning">Aucun</span>'}</td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function filterUsers() {
+            const search = document.getElementById('userSearch').value.toLowerCase();
+            const filter = document.getElementById('userFilter').value;
+            
+            const rows = document.querySelectorAll('#usersTableBody tr');
+            rows.forEach(row => {
+                const text = row.textContent.toLowerCase();
+                const hasSub = row.querySelector('.badge-success');
+                
+                let show = text.includes(search);
+                if (filter === 'active' && !hasSub) show = false;
+                if (filter === 'inactive' && hasSub) show = false;
+                
+                row.style.display = show ? '' : 'none';
+            });
+        }
+
+        // Subscriptions
+        function renderSubscriptions() {
+            const tbody = document.getElementById('subscriptionsTableBody');
+            const activeSubs = subscriptions.filter(s => s.status === 'active');
+            
+            tbody.innerHTML = activeSubs.map(sub => {
+                const user = users.find(u => u.id === sub.userId);
+                const catNames = {breakfast: 'Petit-déj', lunch: 'Déjeuner', dinner: 'Dîner'};
+                return `
+                    <tr>
+                        <td><strong>${user?.name || 'N/A'}</strong><br><small>${user?.email}</small></td>
+                        <td><span class="badge badge-info">${sub.name}</span></td>
+                        <td><strong class="text-success">${sub.remainingMeals}/${sub.meals}</strong></td>
+                        <td>${sub.weeklyUsed || 0}</td>
+                        <td>${sub.categories.map(c => catNames[c]).join(', ')}</td>
+                        <td>${sub.endDate?.toDate().toLocaleDateString('fr-FR') || 'N/A'}</td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function filterSubscriptions() {
+            const search = document.getElementById('subSearch').value.toLowerCase();
+            const planFilter = document.getElementById('subPlanFilter').value;
+            
+            const rows = document.querySelectorAll('#subscriptionsTableBody tr');
+            rows.forEach(row => {
+                const text = row.textContent.toLowerCase();
+                const plan = row.querySelector('.badge-info')?.textContent.toLowerCase();
+                
+                let show = text.includes(search);
+                if (planFilter !== 'all' && !plan?.includes(planFilter)) show = false;
+                
+                row.style.display = show ? '' : 'none';
+            });
+        }
+
+        // Menu Management
+        function renderMenu() {
+            const grid = document.getElementById('menuGrid');
+            const categoryFilter = document.getElementById('menuCategoryFilter').value;
+            const subcategoryFilter = document.getElementById('menuSubcategoryFilter').value;
+            
+            let filtered = meals;
+            if (categoryFilter !== 'all') filtered = filtered.filter(m => m.category === categoryFilter);
+            if (subcategoryFilter !== 'all') filtered = filtered.filter(m => m.subcategory === subcategoryFilter);
+            
+            grid.innerHTML = filtered.map(meal => `
+                <div class="menu-card">
+                    <div class="menu-image" style="${meal.image ? `background-image: url(${meal.image}); background-size: cover;` : ''}">
+                        ${!meal.image ? meal.emoji || '🍽️' : ''}
+                    </div>
+                    <div class="menu-info">
+                        <h4>${meal.name}</h4>
+                        <div class="menu-meta">
+                            <span class="badge badge-info">${meal.category}</span>
+                            <span>${meal.price.toFixed(2)}€</span>
+                            <span>⚡ ${meal.calories} kcal</span>
+                        </div>
+                        <p style="color: #666; font-size: 0.9rem;">${meal.description}</p>
+                        <div class="menu-actions">
+                            <button class="btn btn-primary btn-small" onclick="editMeal('${meal.id}')">Modifier</button>
+                            <button class="btn btn-danger btn-small" onclick="deleteMeal('${meal.id}')">Supprimer</button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+            
+            updateSubcategoryFilterOptions();
+        }
+
+        function updateSubcategoryFilterOptions() {
+            const category = document.getElementById('menuCategoryFilter').value;
+            const select = document.getElementById('menuSubcategoryFilter');
+            
+            if (category === 'all') {
+                select.innerHTML = '<option value="all">Toutes sous-catégories</option>';
+                return;
+            }
+            
+            const subs = subcategories[category] || [];
+            select.innerHTML = `
+                <option value="all">Toutes sous-catégories</option>
+                ${subs.map(s => `<option value="${s.id}">${s.name}</option>`).join('')}
+            `;
+        }
+
+        function filterMenu() {
+            renderMenu();
+        }
+
+        function openAddMealModal() {
+            document.getElementById('mealModalTitle').textContent = 'Ajouter un plat';
+            document.getElementById('mealForm').reset();
+            document.getElementById('mealId').value = '';
+            updateSubcategories();
+            document.getElementById('mealModal').classList.add('active');
+        }
+
+        function editMeal(id) {
+            const meal = meals.find(m => m.id === id);
+            if (!meal) return;
+            
+            document.getElementById('mealModalTitle').textContent = 'Modifier le plat';
+            document.getElementById('mealId').value = meal.id;
+            document.getElementById('mealName').value = meal.name;
+            document.getElementById('mealPrice').value = meal.price;
+            document.getElementById('mealCategory').value = meal.category;
+            updateSubcategories();
+            document.getElementById('mealSubcategory').value = meal.subcategory;
+            document.getElementById('mealImage').value = meal.image || '';
+            document.getElementById('mealDescription').value = meal.description;
+            document.getElementById('mealIngredients').value = meal.ingredients?.join(', ') || '';
+            document.getElementById('mealCalories').value = meal.calories;
+            document.getElementById('mealEmoji').value = meal.emoji || '';
+            
+            document.getElementById('mealModal').classList.add('active');
+        }
+
+        function updateSubcategories() {
+            const category = document.getElementById('mealCategory').value;
+            const select = document.getElementById('mealSubcategory');
+            const subs = subcategories[category] || [];
+            
+            select.innerHTML = subs.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
+        }
+
+        async function saveMeal() {
+            const id = document.getElementById('mealId').value;
+            const mealData = {
+                name: document.getElementById('mealName').value,
+                price: parseFloat(document.getElementById('mealPrice').value),
+                category: document.getElementById('mealCategory').value,
+                subcategory: document.getElementById('mealSubcategory').value,
+                image: document.getElementById('mealImage').value,
+                description: document.getElementById('mealDescription').value,
+                ingredients: document.getElementById('mealIngredients').value.split(',').map(s => s.trim()),
+                calories: parseInt(document.getElementById('mealCalories').value),
+                emoji: document.getElementById('mealEmoji').value,
+                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+            };
+            
+            showLoading(true);
+            try {
+                if (id) {
+                    await db.collection('meals').doc(id).update(mealData);
+                } else {
+                    mealData.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+                    await db.collection('meals').add(mealData);
+                }
+                
+                closeModal('mealModal');
+                await loadAllData();
+                showAlert(id ? 'Plat modifié' : 'Plat ajouté', 'success');
+            } catch (error) {
+                showAlert('Erreur lors de l\'enregistrement', 'error');
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        async function deleteMeal(id) {
+            if (!confirm('Supprimer ce plat ?')) return;
+            
+            showLoading(true);
+            try {
+                await db.collection('meals').doc(id).delete();
+                await loadAllData();
+                showAlert('Plat supprimé', 'success');
+            } catch (error) {
+                showAlert('Erreur lors de la suppression', 'error');
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        // Subcategories
+        function openManageSubcategoriesModal() {
+            loadSubcategoriesForManagement();
+            document.getElementById('subcategoriesModal').classList.add('active');
+        }
+
+        function loadSubcategoriesForManagement() {
+            const category = document.getElementById('subcatCategory').value;
+            const list = document.getElementById('subcategoriesList');
+            const subs = subcategories[category] || [];
+            
+            list.innerHTML = subs.map((sub, index) => `
+                <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.5rem; background: #f5f5f5; margin-bottom: 0.5rem; border-radius: 4px;">
+                    <span>${sub.name} <small style="color: #999;">(${sub.id})</small></span>
+                    <button class="btn btn-danger btn-small" onclick="removeSubcategory('${category}', ${index})">Supprimer</button>
+                </div>
+            `).join('') || '<p style="color: #666;">Aucune sous-catégorie</p>';
+        }
+
+        async function addSubcategory() {
+            const category = document.getElementById('subcatCategory').value;
+            const name = document.getElementById('newSubcategoryName').value.trim();
+            const id = document.getElementById('newSubcategoryId').value.trim().toLowerCase();
+            
+            if (!name || !id) {
+                showAlert('Veuillez remplir tous les champs', 'error');
+                return;
+            }
+            
+            if (!subcategories[category]) subcategories[category] = [];
+            subcategories[category].push({id, name});
+            
+            await db.collection('config').doc('subcategories').set(subcategories);
+            document.getElementById('newSubcategoryName').value = '';
+            document.getElementById('newSubcategoryId').value = '';
+            loadSubcategoriesForManagement();
+            showAlert('Sous-catégorie ajoutée', 'success');
+        }
+
+        async function removeSubcategory(category, index) {
+            if (!confirm('Supprimer cette sous-catégorie ?')) return;
+            
+            subcategories[category].splice(index, 1);
+            await db.collection('config').doc('subcategories').set(subcategories);
+            loadSubcategoriesForManagement();
+            showAlert('Sous-catégorie supprimée', 'success');
+        }
+
+        // Plans
+        function renderPlans() {
+            const grid = document.getElementById('plansGrid');
+            
+            grid.innerHTML = plans.map(plan => {
+                const catNames = {breakfast: 'Petit-déj', lunch: 'Déjeuner', dinner: 'Dîner'};
+                return `
+                    <div class="sub-plan-card ${plan.active ? 'active' : ''}">
+                        <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 1rem;">
+                            <div>
+                                <h3>${plan.name}</h3>
+                                <div style="font-size: 2rem; color: var(--primary); font-weight: bold;">${plan.price}€<span style="font-size: 1rem; color: #666;">/semaine</span></div>
+                            </div>
+                            ${plan.active ? '<span class="badge badge-success">Actif</span>' : '<span class="badge badge-warning">Inactif</span>'}
+                        </div>
+                        <div style="margin: 1rem 0;">
+                            <strong>${plan.meals}</strong> plats/semaine<br>
+                            <strong>Catégories:</strong> ${plan.categories.map(c => catNames[c]).join(', ')}
+                        </div>
+                        <ul class="features-list">
+                            ${plan.features.map(f => `<li>${f}</li>`).join('')}
+                        </ul>
+                        <div style="display: flex; gap: 0.5rem; margin-top: 1rem;">
+                            <button class="btn btn-primary btn-small" onclick="editPlan('${plan.id}')" style="flex: 1;">Modifier</button>
+                            <button class="btn btn-danger btn-small" onclick="togglePlan('${plan.id}')">
+                                ${plan.active ? 'Désactiver' : 'Activer'}
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function openAddPlanModal() {
+            document.getElementById('planModalTitle').textContent = 'Nouvelle offre';
+            document.getElementById('planForm').reset();
+            document.getElementById('planId').value = '';
+            document.getElementById('planModal').classList.add('active');
+        }
+
+        function editPlan(id) {
+            const plan = plans.find(p => p.id === id);
+            if (!plan) return;
+            
+            document.getElementById('planModalTitle').textContent = 'Modifier l\'offre';
+            document.getElementById('planId').value = plan.id;
+            document.getElementById('planName').value = plan.name;
+            document.getElementById('planPrice').value = plan.price;
+            document.getElementById('planMeals').value = plan.meals;
+            document.getElementById('catBreakfast').checked = plan.categories.includes('breakfast');
+            document.getElementById('catLunch').checked = plan.categories.includes('lunch');
+            document.getElementById('catDinner').checked = plan.categories.includes('dinner');
+            document.getElementById('planFeatures').value = plan.features.join('\n');
+            
+            document.getElementById('planModal').classList.add('active');
+        }
+
+        async function savePlan() {
+            const id = document.getElementById('planId').value || db.collection('plans').doc().id;
+            const categories = [];
+            if (document.getElementById('catBreakfast').checked) categories.push('breakfast');
+            if (document.getElementById('catLunch').checked) categories.push('lunch');
+            if (document.getElementById('catDinner').checked) categories.push('dinner');
+            
+            const planData = {
+                id,
+                name: document.getElementById('planName').value,
+                price: parseFloat(document.getElementById('planPrice').value),
+                meals: parseInt(document.getElementById('planMeals').value),
+                categories,
+                features: document.getElementById('planFeatures').value.split('\n').filter(f => f.trim()),
+                active: true,
+                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+            };
+            
+            showLoading(true);
+            try {
+                await db.collection('plans').doc(id).set(planData, {merge: true});
+                closeModal('planModal');
+                await loadAllData();
+                showAlert('Offre enregistrée', 'success');
+            } catch (error) {
+                showAlert('Erreur lors de l\'enregistrement', 'error');
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        async function togglePlan(id) {
+            const plan = plans.find(p => p.id === id);
+            if (!plan) return;
+            
+            showLoading(true);
+            try {
+                await db.collection('plans').doc(id).update({
+                    active: !plan.active,
+                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                await loadAllData();
+                showAlert(plan.active ? 'Offre désactivée' : 'Offre activée', 'success');
+            } catch (error) {
+                showAlert('Erreur', 'error');
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        // Utilities
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.remove('active');
+        }
+
+        function showLoading(show) {
+            document.getElementById('loadingOverlay').classList.toggle('active', show);
+        }
+
+        function showAlert(message, type) {
+            const alert = document.createElement('div');
+            alert.className = `alert alert-${type}`;
+            alert.textContent = message;
+            document.body.appendChild(alert);
+            setTimeout(() => alert.remove(), 3000);
+        }
+
+        // Close modals on outside click
+        document.querySelectorAll('.modal-overlay').forEach(modal => {
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) modal.classList.remove('active');
+            });
+        });
+    </script>
+</body>
+</html>
