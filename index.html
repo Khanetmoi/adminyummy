@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Yummy Admin - Dashboard</title>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
@@ -35,22 +35,57 @@
             background: var(--light);
             color: var(--dark);
             line-height: 1.6;
+            overflow-x: hidden;
         }
 
+        /* Mobile Menu Toggle */
+        .mobile-menu-toggle {
+            display: none;
+            position: fixed;
+            top: 1rem;
+            left: 1rem;
+            z-index: 1001;
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 0.75rem;
+            border-radius: 8px;
+            cursor: pointer;
+            box-shadow: var(--shadow);
+            font-size: 1.2rem;
+        }
+
+        .mobile-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 998;
+        }
+
+        .mobile-overlay.active {
+            display: block;
+        }
+
+        /* Login Screen */
         .login-screen {
-            height: 100vh;
+            min-height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
             background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            padding: 1rem;
         }
 
         .login-box {
             background: var(--white);
-            padding: 3rem;
+            padding: 2rem;
             border-radius: var(--radius);
             box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-            width: 90%;
+            width: 100%;
             max-width: 400px;
         }
 
@@ -58,6 +93,7 @@
             color: var(--primary);
             margin-bottom: 2rem;
             text-align: center;
+            font-size: clamp(1.5rem, 5vw, 2rem);
         }
 
         .form-group {
@@ -68,17 +104,23 @@
             display: block;
             margin-bottom: 0.5rem;
             font-weight: 600;
+            font-size: 0.9rem;
         }
 
-        .form-group input {
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
             width: 100%;
             padding: 0.8rem;
             border: 2px solid #e0e0e0;
             border-radius: 8px;
             font-size: 1rem;
+            font-family: inherit;
         }
 
-        .form-group input:focus {
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
             outline: none;
             border-color: var(--primary);
         }
@@ -91,6 +133,10 @@
             font-weight: 600;
             transition: all 0.3s;
             font-size: 1rem;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
         }
 
         .btn-primary {
@@ -129,10 +175,11 @@
         }
 
         .btn-small {
-            padding: 0.4rem 0.8rem;
+            padding: 0.5rem 1rem;
             font-size: 0.85rem;
         }
 
+        /* Dashboard Layout */
         .dashboard {
             display: none;
             min-height: 100vh;
@@ -148,6 +195,8 @@
             color: var(--white);
             padding: 2rem 0;
             overflow-y: auto;
+            z-index: 999;
+            transition: transform 0.3s ease;
         }
 
         .sidebar-header {
@@ -171,6 +220,7 @@
             display: flex;
             align-items: center;
             gap: 0.8rem;
+            font-size: 0.95rem;
         }
 
         .menu-item:hover, .menu-item.active {
@@ -181,6 +231,8 @@
         .main-content {
             margin-left: 250px;
             padding: 2rem;
+            min-height: 100vh;
+            transition: margin-left 0.3s ease;
         }
 
         .header {
@@ -190,18 +242,23 @@
             margin-bottom: 2rem;
             padding-bottom: 1rem;
             border-bottom: 2px solid #e0e0e0;
+            flex-wrap: wrap;
+            gap: 1rem;
         }
 
         .header h1 {
             color: var(--dark);
+            font-size: clamp(1.5rem, 4vw, 2rem);
         }
 
         .user-menu {
             display: flex;
             align-items: center;
             gap: 1rem;
+            flex-wrap: wrap;
         }
 
+        /* Stats Grid */
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -217,16 +274,22 @@
             display: flex;
             align-items: center;
             gap: 1rem;
+            transition: transform 0.2s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-2px);
         }
 
         .stat-icon {
-            width: 60px;
-            height: 60px;
+            width: 50px;
+            height: 50px;
             border-radius: 12px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 1.8rem;
+            font-size: 1.5rem;
+            flex-shrink: 0;
         }
 
         .stat-icon.blue { background: #e3f2fd; }
@@ -236,7 +299,7 @@
         .stat-icon.purple { background: #f3e5f5; }
 
         .stat-info h3 {
-            font-size: 2rem;
+            font-size: clamp(1.5rem, 4vw, 2rem);
             color: var(--dark);
         }
 
@@ -245,6 +308,7 @@
             font-size: 0.9rem;
         }
 
+        /* Sections */
         .section {
             display: none;
             animation: fadeIn 0.3s;
@@ -278,11 +342,14 @@
 
         .card-header h2 {
             color: var(--dark);
+            font-size: clamp(1.2rem, 3vw, 1.5rem);
         }
 
+        /* Tables */
         .data-table {
             width: 100%;
             border-collapse: collapse;
+            font-size: 0.9rem;
         }
 
         .data-table th, .data-table td {
@@ -295,46 +362,39 @@
             background: var(--light);
             font-weight: 600;
             color: #666;
-            font-size: 0.9rem;
+            font-size: 0.85rem;
             text-transform: uppercase;
+            white-space: nowrap;
         }
 
         .data-table tr:hover {
             background: #f5f5f5;
         }
 
+        .table-responsive {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            border-radius: 8px;
+            border: 1px solid #e0e0e0;
+        }
+
+        /* Badges */
         .badge {
             padding: 0.3rem 0.8rem;
             border-radius: 20px;
-            font-size: 0.85rem;
+            font-size: 0.8rem;
             font-weight: 600;
+            display: inline-block;
+            white-space: nowrap;
         }
 
-        .badge-success {
-            background: #d4edda;
-            color: #155724;
-        }
+        .badge-success { background: #d4edda; color: #155724; }
+        .badge-warning { background: #fff3cd; color: #856404; }
+        .badge-danger { background: #f8d7da; color: #721c24; }
+        .badge-info { background: #d1ecf1; color: #0c5460; }
+        .badge-primary { background: #cce5ff; color: #004085; }
 
-        .badge-warning {
-            background: #fff3cd;
-            color: #856404;
-        }
-
-        .badge-danger {
-            background: #f8d7da;
-            color: #721c24;
-        }
-
-        .badge-info {
-            background: #d1ecf1;
-            color: #0c5460;
-        }
-
-        .badge-primary {
-            background: #cce5ff;
-            color: #004085;
-        }
-
+        /* Modals */
         .modal-overlay {
             position: fixed;
             top: 0;
@@ -346,7 +406,8 @@
             justify-content: center;
             align-items: center;
             z-index: 1000;
-            padding: 2rem;
+            padding: 1rem;
+            backdrop-filter: blur(4px);
         }
 
         .modal-overlay.active {
@@ -356,11 +417,17 @@
         .modal {
             background: var(--white);
             border-radius: var(--radius);
-            width: 90%;
+            width: 100%;
             max-width: 700px;
             max-height: 90vh;
             overflow-y: auto;
             position: relative;
+            animation: modalSlide 0.3s;
+        }
+
+        @keyframes modalSlide {
+            from { transform: translateY(50px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
         }
 
         .modal-header {
@@ -369,6 +436,10 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
+            position: sticky;
+            top: 0;
+            background: white;
+            z-index: 10;
         }
 
         .modal-close {
@@ -377,6 +448,17 @@
             font-size: 1.5rem;
             cursor: pointer;
             color: #666;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: background 0.2s;
+        }
+
+        .modal-close:hover {
+            background: #f0f0f0;
         }
 
         .modal-body {
@@ -389,40 +471,16 @@
             display: flex;
             justify-content: flex-end;
             gap: 1rem;
+            flex-wrap: wrap;
+            position: sticky;
+            bottom: 0;
+            background: white;
         }
 
         .form-row {
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 1rem;
-        }
-
-        .form-group {
-            margin-bottom: 1rem;
-        }
-
-        .form-group label {
-            display: block;
-            margin-bottom: 0.5rem;
-            font-weight: 500;
-            font-size: 0.9rem;
-        }
-
-        .form-group input,
-        .form-group select,
-        .form-group textarea {
-            width: 100%;
-            padding: 0.7rem;
-            border: 2px solid #e0e0e0;
-            border-radius: 8px;
-            font-family: inherit;
-        }
-
-        .form-group input:focus,
-        .form-group select:focus,
-        .form-group textarea:focus {
-            outline: none;
-            border-color: var(--primary);
         }
 
         .checkbox-group {
@@ -435,8 +493,10 @@
             display: flex;
             align-items: center;
             gap: 0.5rem;
+            cursor: pointer;
         }
 
+        /* Menu Grid */
         .menu-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
@@ -449,6 +509,8 @@
             overflow: hidden;
             box-shadow: var(--shadow);
             transition: transform 0.3s;
+            display: flex;
+            flex-direction: column;
         }
 
         .menu-card:hover {
@@ -463,6 +525,7 @@
             justify-content: center;
             font-size: 3rem;
             position: relative;
+            overflow: hidden;
         }
 
         .menu-image img {
@@ -473,6 +536,9 @@
 
         .menu-info {
             padding: 1rem;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
         }
 
         .menu-meta {
@@ -485,9 +551,11 @@
         .menu-actions {
             display: flex;
             gap: 0.5rem;
-            margin-top: 1rem;
+            margin-top: auto;
+            padding-top: 1rem;
         }
 
+        /* Plans Grid */
         .sub-plans-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
@@ -500,6 +568,8 @@
             padding: 1.5rem;
             box-shadow: var(--shadow);
             border: 3px solid transparent;
+            display: flex;
+            flex-direction: column;
         }
 
         .sub-plan-card.active {
@@ -509,12 +579,14 @@
         .features-list {
             list-style: none;
             margin: 1rem 0;
+            flex: 1;
         }
 
         .features-list li {
             padding: 0.3rem 0;
             padding-left: 1.5rem;
             position: relative;
+            font-size: 0.9rem;
         }
 
         .features-list li::before {
@@ -522,8 +594,10 @@
             position: absolute;
             left: 0;
             color: var(--success);
+            font-weight: bold;
         }
 
+        /* Filter Bar */
         .filter-bar {
             display: flex;
             gap: 1rem;
@@ -536,6 +610,7 @@
             padding: 0.6rem 1rem;
             border: 2px solid #e0e0e0;
             border-radius: 8px;
+            font-size: 0.9rem;
         }
 
         .search-box {
@@ -543,6 +618,7 @@
             min-width: 200px;
         }
 
+        /* Loading & Alerts */
         .loading-overlay {
             position: fixed;
             top: 0;
@@ -554,6 +630,7 @@
             justify-content: center;
             align-items: center;
             z-index: 9999;
+            backdrop-filter: blur(4px);
         }
 
         .loading-overlay.active {
@@ -579,9 +656,10 @@
             right: 20px;
             padding: 1rem 1.5rem;
             border-radius: 8px;
-            z-index: 9999;
+            z-index: 10000;
             animation: slideIn 0.3s;
-            max-width: 400px;
+            max-width: 90vw;
+            word-wrap: break-word;
         }
 
         @keyframes slideIn {
@@ -589,17 +667,10 @@
             to { transform: translateX(0); opacity: 1; }
         }
 
-        .alert-success {
-            background: #d4edda;
-            color: #155724;
-        }
+        .alert-success { background: #d4edda; color: #155724; }
+        .alert-error { background: #f8d7da; color: #721c24; }
 
-        .alert-error {
-            background: #f8d7da;
-            color: #721c24;
-        }
-
-        /* Order specific styles */
+        /* Orders Specific */
         .order-card {
             background: var(--white);
             border-radius: var(--radius);
@@ -609,13 +680,8 @@
             border-left: 4px solid var(--warning);
         }
 
-        .order-card.accepted {
-            border-left-color: var(--success);
-        }
-
-        .order-card.denied {
-            border-left-color: var(--danger);
-        }
+        .order-card.accepted { border-left-color: var(--success); }
+        .order-card.denied { border-left-color: var(--danger); }
 
         .order-header {
             display: flex;
@@ -627,14 +693,14 @@
         }
 
         .order-id {
-            font-size: 1.2rem;
+            font-size: 1.1rem;
             font-weight: bold;
             color: var(--dark);
         }
 
         .order-date {
             color: #666;
-            font-size: 0.9rem;
+            font-size: 0.85rem;
         }
 
         .order-items {
@@ -649,11 +715,11 @@
             justify-content: space-between;
             padding: 0.5rem 0;
             border-bottom: 1px solid #e0e0e0;
+            flex-wrap: wrap;
+            gap: 0.5rem;
         }
 
-        .order-item:last-child {
-            border-bottom: none;
-        }
+        .order-item:last-child { border-bottom: none; }
 
         .order-total {
             text-align: right;
@@ -669,10 +735,12 @@
             display: flex;
             gap: 0.5rem;
             margin-top: 1rem;
+            flex-wrap: wrap;
         }
 
         .status-btn {
             flex: 1;
+            min-width: 100px;
             padding: 0.6rem;
             border: 2px solid;
             background: transparent;
@@ -680,56 +748,215 @@
             cursor: pointer;
             font-weight: 600;
             transition: all 0.3s;
+            font-size: 0.9rem;
         }
 
-        .status-btn.accept {
-            border-color: var(--success);
-            color: var(--success);
-        }
+        .status-btn.accept { border-color: var(--success); color: var(--success); }
+        .status-btn.accept:hover, .status-btn.accept.active { background: var(--success); color: white; }
+        .status-btn.deny { border-color: var(--danger); color: var(--danger); }
+        .status-btn.deny:hover, .status-btn.deny.active { background: var(--danger); color: white; }
+        .status-btn.pending { border-color: var(--warning); color: var(--warning); }
+        .status-btn.pending:hover, .status-btn.pending.active { background: var(--warning); color: white; }
 
-        .status-btn.accept:hover, .status-btn.accept.active {
-            background: var(--success);
-            color: white;
-        }
+        .hidden { display: none !important; }
 
-        .status-btn.deny {
-            border-color: var(--danger);
-            color: var(--danger);
-        }
-
-        .status-btn.deny:hover, .status-btn.deny.active {
-            background: var(--danger);
-            color: white;
-        }
-
-        .status-btn.pending {
-            border-color: var(--warning);
-            color: var(--warning);
-        }
-
-        .status-btn.pending:hover, .status-btn.pending.active {
-            background: var(--warning);
-            color: white;
-        }
-
-        .hidden {
-            display: none !important;
+        /* Responsive Breakpoints */
+        @media (max-width: 1024px) {
+            .main-content {
+                padding: 1.5rem;
+            }
+            
+            .stats-grid {
+                grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+                gap: 1rem;
+            }
+            
+            .menu-grid {
+                grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            }
         }
 
         @media (max-width: 768px) {
+            .mobile-menu-toggle {
+                display: flex;
+            }
+            
             .sidebar {
                 transform: translateX(-100%);
+                width: 280px;
+                max-width: 80vw;
             }
+            
+            .sidebar.active {
+                transform: translateX(0);
+            }
+            
             .main-content {
                 margin-left: 0;
+                padding: 4rem 1rem 1rem;
             }
+            
+            .header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 1rem;
+            }
+            
+            .user-menu {
+                width: 100%;
+                justify-content: space-between;
+            }
+            
             .form-row {
                 grid-template-columns: 1fr;
+            }
+            
+            .filter-bar {
+                flex-direction: column;
+            }
+            
+            .search-box {
+                width: 100%;
+            }
+            
+            .modal {
+                max-height: 95vh;
+                border-radius: 12px 12px 0 0;
+                position: fixed;
+                bottom: 0;
+                animation: modalSlideUp 0.3s;
+            }
+            
+            @keyframes modalSlideUp {
+                from { transform: translateY(100%); }
+                to { transform: translateY(0); }
+            }
+            
+            .modal-footer {
+                flex-direction: column-reverse;
+            }
+            
+            .modal-footer .btn {
+                width: 100%;
+            }
+            
+            .menu-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .sub-plans-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .order-header {
+                flex-direction: column;
+            }
+            
+            .order-actions {
+                flex-direction: column;
+            }
+            
+            .status-btn {
+                width: 100%;
+            }
+            
+            .card-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .data-table {
+                font-size: 0.85rem;
+            }
+            
+            .data-table th, .data-table td {
+                padding: 0.75rem 0.5rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .login-box {
+                padding: 1.5rem;
+            }
+            
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .stat-card {
+                padding: 1rem;
+                flex-direction: column;
+                text-align: center;
+            }
+            
+            .stat-icon {
+                width: 40px;
+                height: 40px;
+                font-size: 1.2rem;
+            }
+            
+            .stat-info h3 {
+                font-size: 1.5rem;
+            }
+            
+            .checkbox-group {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+            
+            .menu-actions {
+                flex-direction: column;
+            }
+            
+            .menu-actions .btn {
+                width: 100%;
+            }
+        }
+
+        /* Touch optimizations */
+        @media (hover: none) {
+            .menu-item:hover {
+                background: transparent;
+            }
+            
+            .menu-item:active {
+                background: rgba(255,255,255,0.1);
+            }
+            
+            .btn:hover {
+                transform: none;
+            }
+            
+            .btn:active {
+                transform: scale(0.98);
+            }
+        }
+
+        /* Safe area for notched phones */
+        @supports (padding-top: env(safe-area-inset-top)) {
+            .sidebar {
+                padding-top: calc(2rem + env(safe-area-inset-top));
+            }
+            
+            .mobile-menu-toggle {
+                top: calc(1rem + env(safe-area-inset-top));
+            }
+            
+            .main-content {
+                padding-top: calc(4rem + env(safe-area-inset-top));
             }
         }
     </style>
 </head>
 <body>
+
+    <!-- Mobile Menu Toggle -->
+    <button class="mobile-menu-toggle" onclick="toggleMobileMenu()" aria-label="Menu">
+        ☰
+    </button>
+    
+    <!-- Mobile Overlay -->
+    <div class="mobile-overlay" onclick="toggleMobileMenu()"></div>
 
     <!-- Login Screen -->
     <div class="login-screen" id="loginScreen">
@@ -738,11 +965,11 @@
             <form onsubmit="handleLogin(event)">
                 <div class="form-group">
                     <label>Email Admin</label>
-                    <input type="email" id="adminEmail" required placeholder="admin@yummy.com">
+                    <input type="email" id="adminEmail" required placeholder="admin@yummy.com" autocomplete="email">
                 </div>
                 <div class="form-group">
                     <label>Mot de passe</label>
-                    <input type="password" id="adminPassword" required placeholder="••••••••">
+                    <input type="password" id="adminPassword" required placeholder="••••••••" autocomplete="current-password">
                 </div>
                 <button type="submit" class="btn btn-primary" id="loginBtn">Connexion</button>
             </form>
@@ -751,7 +978,7 @@
 
     <!-- Dashboard -->
     <div class="dashboard" id="dashboard">
-        <aside class="sidebar">
+        <aside class="sidebar" id="sidebar">
             <div class="sidebar-header">
                 <h2>🍽️ Yummy</h2>
                 <p style="color: #999; font-size: 0.9rem;">Panel Admin</p>
@@ -882,7 +1109,7 @@
                             </select>
                         </div>
                     </div>
-                    <div style="overflow-x: auto;">
+                    <div class="table-responsive">
                         <table class="data-table">
                             <thead>
                                 <tr>
@@ -915,7 +1142,7 @@
                             </select>
                         </div>
                     </div>
-                    <div style="overflow-x: auto;">
+                    <div class="table-responsive">
                         <table class="data-table">
                             <thead>
                                 <tr>
@@ -1025,11 +1252,11 @@
                     </div>
                     <div class="form-group">
                         <label>Description</label>
-                        <textarea id="mealDescription" required></textarea>
+                        <textarea id="mealDescription" rows="3" required></textarea>
                     </div>
                     <div class="form-group">
                         <label>Ingrédients (séparés par virgules)</label>
-                        <textarea id="mealIngredients" placeholder="Farine, Œufs, Sucre..." required></textarea>
+                        <textarea id="mealIngredients" rows="2" placeholder="Farine, Œufs, Sucre..." required></textarea>
                     </div>
                     <div class="form-row">
                         <div class="form-group">
@@ -1069,9 +1296,9 @@
                 <div id="subcategoriesList" style="margin: 1rem 0;"></div>
                 <div class="form-group">
                     <label>Nouvelle sous-catégorie</label>
-                    <div style="display: flex; gap: 0.5rem;">
-                        <input type="text" id="newSubcategoryName" placeholder="Nom">
-                        <input type="text" id="newSubcategoryId" placeholder="ID (ex: burger)">
+                    <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                        <input type="text" id="newSubcategoryName" placeholder="Nom" style="flex: 2;">
+                        <input type="text" id="newSubcategoryId" placeholder="ID (ex: burger)" style="flex: 1;">
                         <button class="btn btn-success" onclick="addSubcategory()">Ajouter</button>
                     </div>
                 </div>
@@ -1169,6 +1396,23 @@
             dinner: [{id: 'meat', name: 'Viandes'}, {id: 'fish', name: 'Poissons'}, {id: 'vegetarian', name: 'Végétarien'}, {id: 'asian', name: 'Asiatique'}]
         };
 
+        // Mobile Menu Toggle
+        function toggleMobileMenu() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.querySelector('.mobile-overlay');
+            sidebar.classList.toggle('active');
+            overlay.classList.toggle('active');
+        }
+
+        // Close mobile menu when clicking on a menu item
+        document.querySelectorAll('.menu-item').forEach(item => {
+            item.addEventListener('click', () => {
+                if (window.innerWidth <= 768) {
+                    toggleMobileMenu();
+                }
+            });
+        });
+
         // Auth
         auth.onAuthStateChanged((user) => {
             if (user) {
@@ -1251,6 +1495,11 @@
                 'plans': 'Offres & Tarifs'
             };
             document.getElementById('pageTitle').textContent = titles[section];
+            
+            // Scroll to top on mobile
+            if (window.innerWidth <= 768) {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
         }
 
         // Data Loading
@@ -1343,10 +1592,10 @@
             const recentHtml = recent.map(order => {
                 const user = users.find(u => u.id === order.userId);
                 return `
-                    <div style="padding: 1rem; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center;">
-                        <div>
+                    <div style="padding: 1rem; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem;">
+                        <div style="flex: 1; min-width: 200px;">
                             <strong>Commande #${order.id.slice(-6).toUpperCase()}</strong>
-                            <p style="color: #666; font-size: 0.9rem;">${user?.name || 'Client'} • ${order.items?.length || 0} plat(s)</p>
+                            <p style="color: #666; font-size: 0.9rem; margin: 0;">${user?.name || 'Client'} • ${order.items?.length || 0} plat(s)</p>
                         </div>
                         <span class="badge badge-${order.status === 'pending' ? 'warning' : order.status === 'accepted' ? 'success' : 'danger'}">
                             ${order.status === 'pending' ? 'En attente' : order.status === 'accepted' ? 'Acceptée' : 'Refusée'}
@@ -1355,7 +1604,7 @@
                 `;
             }).join('');
             
-            document.getElementById('recentOrders').innerHTML = recentHtml || '<p style="color: #666; text-align: center;">Aucune commande</p>';
+            document.getElementById('recentOrders').innerHTML = recentHtml || '<p style="color: #666; text-align: center; padding: 2rem;">Aucune commande</p>';
         }
 
         function updateOrdersUI() {
@@ -1418,7 +1667,7 @@
                 return `
                     <div class="order-card ${order.status}">
                         <div class="order-header">
-                            <div>
+                            <div style="flex: 1;">
                                 <div class="order-id">Commande #${order.id.slice(-6).toUpperCase()}</div>
                                 <div class="order-date">${date}</div>
                                 <div style="margin-top: 0.5rem;">
@@ -1434,8 +1683,8 @@
                         <div class="order-items">
                             ${order.items?.map(item => `
                                 <div class="order-item">
-                                    <span>${item.emoji || '🍽️'} ${item.name} ${item.note ? `<small style="color: #666;">(${item.note})</small>` : ''}</span>
-                                    <span>${item.price > 0 ? item.price.toFixed(2) + '€' : '<span style="color: var(--success);">Inclus</span>'}</span>
+                                    <span style="flex: 1;">${item.emoji || '🍽️'} ${item.name} ${item.note ? `<small style="color: #666; display: block;">(${item.note})</small>` : ''}</span>
+                                    <span style="white-space: nowrap;">${item.price > 0 ? item.price.toFixed(2) + '€' : '<span style="color: var(--success);">Inclus</span>'}</span>
                                 </div>
                             `).join('') || '<p style="color: #666;">Aucun détail</p>'}
                             <div class="order-total">
@@ -1444,11 +1693,9 @@
                             </div>
                         </div>
                         
-                        <div style="display: flex; gap: 0.5rem; margin-top: 1rem; padding-top: 1rem; border-top: 1px solid #eee;">
-                            <small style="color: #666; flex: 1;">
-                                📍 ${order.deliveryAddress || 'Adresse non spécifiée'}<br>
-                                🚚 Livraison estimée: ${order.estimatedDelivery?.toDate().toLocaleString('fr-FR') || 'Non définie'}
-                            </small>
+                        <div style="display: flex; gap: 0.5rem; margin-top: 1rem; padding-top: 1rem; border-top: 1px solid #eee; font-size: 0.9rem; color: #666; flex-wrap: wrap;">
+                            <span style="flex: 1; min-width: 250px;">📍 ${order.deliveryAddress || 'Adresse non spécifiée'}</span>
+                            <span>🚚 ${order.estimatedDelivery?.toDate().toLocaleString('fr-FR') || 'Non définie'}</span>
                         </div>
                         
                         <div class="order-actions">
@@ -1541,7 +1788,7 @@
                         <td>${user.email}</td>
                         <td>${user.phone || 'N/A'}</td>
                         <td>${user.address || 'N/A'}</td>
-                        <td>${sub ? `<span class="text-primary">${sub.name}</span>` : '-'}</td>
+                        <td>${sub ? `<span style="color: var(--info); font-weight: 600;">${sub.name}</span>` : '-'}</td>
                         <td>${sub ? '<span class="badge badge-success">Actif</span>' : '<span class="badge badge-warning">Aucun</span>'}</td>
                     </tr>
                 `;
@@ -1577,7 +1824,7 @@
                     <tr>
                         <td><strong>${user?.name || 'N/A'}</strong><br><small>${user?.email}</small></td>
                         <td><span class="badge badge-info">${sub.name}</span></td>
-                        <td><strong class="text-success">${sub.remainingMeals}/${sub.meals}</strong></td>
+                        <td><strong style="color: var(--success);">${sub.remainingMeals}/${sub.meals}</strong></td>
                         <td>${sub.weeklyUsed || 0}</td>
                         <td>${sub.categories.map(c => catNames[c]).join(', ')}</td>
                         <td>${sub.endDate?.toDate().toLocaleDateString('fr-FR') || 'N/A'}</td>
@@ -1624,7 +1871,7 @@
                             <span>${meal.price.toFixed(2)}€</span>
                             <span>⚡ ${meal.calories} kcal</span>
                         </div>
-                        <p style="color: #666; font-size: 0.9rem;">${meal.description}</p>
+                        <p style="color: #666; font-size: 0.9rem; margin-bottom: 1rem;">${meal.description}</p>
                         <div class="menu-actions">
                             <button class="btn btn-primary btn-small" onclick="editMeal('${meal.id}')">Modifier</button>
                             <button class="btn btn-danger btn-small" onclick="deleteMeal('${meal.id}')">Supprimer</button>
@@ -1662,6 +1909,8 @@
             document.getElementById('mealId').value = '';
             updateSubcategories();
             document.getElementById('mealModal').classList.add('active');
+            // Prevent body scroll on mobile
+            document.body.style.overflow = 'hidden';
         }
 
         function editMeal(id) {
@@ -1682,6 +1931,7 @@
             document.getElementById('mealEmoji').value = meal.emoji || '';
             
             document.getElementById('mealModal').classList.add('active');
+            document.body.style.overflow = 'hidden';
         }
 
         function updateSubcategories() {
@@ -1745,6 +1995,7 @@
         function openManageSubcategoriesModal() {
             loadSubcategoriesForManagement();
             document.getElementById('subcategoriesModal').classList.add('active');
+            document.body.style.overflow = 'hidden';
         }
 
         function loadSubcategoriesForManagement() {
@@ -1753,7 +2004,7 @@
             const subs = subcategories[category] || [];
             
             list.innerHTML = subs.map((sub, index) => `
-                <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.5rem; background: #f5f5f5; margin-bottom: 0.5rem; border-radius: 4px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.75rem; background: #f5f5f5; margin-bottom: 0.5rem; border-radius: 4px; flex-wrap: wrap; gap: 0.5rem;">
                     <span>${sub.name} <small style="color: #999;">(${sub.id})</small></span>
                     <button class="btn btn-danger btn-small" onclick="removeSubcategory('${category}', ${index})">Supprimer</button>
                 </div>
@@ -1797,7 +2048,7 @@
                 const catNames = {breakfast: 'Petit-déj', lunch: 'Déjeuner', dinner: 'Dîner'};
                 return `
                     <div class="sub-plan-card ${plan.active ? 'active' : ''}">
-                        <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 1rem;">
+                        <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 1rem; flex-wrap: wrap; gap: 0.5rem;">
                             <div>
                                 <h3>${plan.name}</h3>
                                 <div style="font-size: 2rem; color: var(--primary); font-weight: bold;">${plan.price}€<span style="font-size: 1rem; color: #666;">/semaine</span></div>
@@ -1813,7 +2064,7 @@
                         </ul>
                         <div style="display: flex; gap: 0.5rem; margin-top: 1rem;">
                             <button class="btn btn-primary btn-small" onclick="editPlan('${plan.id}')" style="flex: 1;">Modifier</button>
-                            <button class="btn btn-danger btn-small" onclick="togglePlan('${plan.id}')">
+                            <button class="btn btn-danger btn-small" onclick="togglePlan('${plan.id}')" style="flex: 1;">
                                 ${plan.active ? 'Désactiver' : 'Activer'}
                             </button>
                         </div>
@@ -1827,6 +2078,7 @@
             document.getElementById('planForm').reset();
             document.getElementById('planId').value = '';
             document.getElementById('planModal').classList.add('active');
+            document.body.style.overflow = 'hidden';
         }
 
         function editPlan(id) {
@@ -1844,6 +2096,7 @@
             document.getElementById('planFeatures').value = plan.features.join('\n');
             
             document.getElementById('planModal').classList.add('active');
+            document.body.style.overflow = 'hidden';
         }
 
         async function savePlan() {
@@ -1899,6 +2152,8 @@
         // Utilities
         function closeModal(modalId) {
             document.getElementById(modalId).classList.remove('active');
+            // Restore body scroll
+            document.body.style.overflow = '';
         }
 
         function showLoading(show) {
@@ -1916,8 +2171,32 @@
         // Close modals on outside click
         document.querySelectorAll('.modal-overlay').forEach(modal => {
             modal.addEventListener('click', (e) => {
-                if (e.target === modal) modal.classList.remove('active');
+                if (e.target === modal) {
+                    const modalId = modal.id;
+                    closeModal(modalId);
+                }
             });
+        });
+
+        // Handle escape key to close modals
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                document.querySelectorAll('.modal-overlay.active').forEach(modal => {
+                    closeModal(modal.id);
+                });
+            }
+        });
+
+        // Handle window resize
+        let resizeTimer;
+        window.addEventListener('resize', () => {
+            clearTimeout(resizeTimer);
+            resizeTimer = setTimeout(() => {
+                if (window.innerWidth > 768) {
+                    document.getElementById('sidebar').classList.remove('active');
+                    document.querySelector('.mobile-overlay').classList.remove('active');
+                }
+            }, 250);
         });
     </script>
 </body>
